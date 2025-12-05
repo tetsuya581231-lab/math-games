@@ -8,7 +8,7 @@
         /* 1. 全体の設定: 背景色とフォントを明るく */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            text-align: center; /* 【修正ポイント】全体のテキストを中央揃えに */
+            /* text-align: center; はここで削除し、Headerに集中させます */
             /* 清潔感のある明るい背景 */
             background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%); 
             color: #333; /* 文字色を濃く */
@@ -19,6 +19,14 @@
             flex-direction: column;
             align-items: center; /* 子要素（リストなど）を中央に配置 */
         }
+        
+        /* 【追加】ヘッダー全体を中央揃えにするためのコンテナ */
+        .page-header {
+            text-align: center; /* これでテキストを確実に中央寄せ！ */
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
         /* 2. メインタイトル */
         h1 { 
             color: #1a73e8; /* 明るい青 */
@@ -36,7 +44,7 @@
         .instruction {
             font-size: 1.5rem;
             color: #e67e22; /* 暖色で指示を強調 */
-            margin-top: 50px;
+            margin-top: 20px; /* 余白を調整 */
             margin-bottom: 30px;
             font-weight: bold;
         }
@@ -95,9 +103,11 @@
 </head>
 <body>
     
-    <h1>MATH & MEMORY LAB</h1>
-    <p class="subtitle">算数力と集中力を高める、未来のトレーニングへようこそ。</p>
-    <p class="instruction">ゲームをえらんでね。</p>
+    <div class="page-header">
+        <h1>MATH & MEMORY LAB</h1>
+        <p class="subtitle">算数力と集中力を高める、未来のトレーニングへようこそ。</p>
+        <p class="instruction">ゲームをえらんでね。</p>
+    </div>
 
     <div class="game-area">
         
