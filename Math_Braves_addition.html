@@ -487,10 +487,12 @@ function saveScore(difficulty, score) {
     
     const isNewRecord = (ranking.length > 0 && ranking[0] === score);
 
-    // TODO: ログインしていれば、ここでFirebaseにもスコアを保存する処理を追加します。
-    // if (currentUser) {
-    //     saveOnlineScore(currentUser.uid, currentUser.displayName, difficulty, score);
-    // }
+    // ★★★ここが追加・修正された部分です★★★
+    // ログインしていれば、Firebaseにもスコアを保存する
+    if (currentUser) {
+        saveOnlineScore(currentUser.uid, currentUser.displayName, difficulty, score);
+    }
+    // ★★★ここまで追加・修正された部分です★★★
 
     return isNewRecord;
 }
