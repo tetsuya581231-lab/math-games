@@ -939,7 +939,7 @@ function gameClear() {
 
     // スコア保存 & 1位更新チェック
     const isNewRecord = saveScore(state.difficulty, finalScore);
-    const highScoreMsg = isNewRecord ? '自己ベストこうしん！' : 'ランクインならず...';
+    const highScoreMsg = isNewRecord ? '自己ベストこうしん！' : '';
 
     ctx.fillStyle = "rgba(0,0,0,0.7)";
     ctx.fillRect(0,0,state.width, state.height);
@@ -1280,3 +1280,4 @@ backToTitle();
 </script>
 </body>
 </html>
+
