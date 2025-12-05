@@ -56,7 +56,7 @@
             border-radius: 5px; cursor: pointer; font-size: 1rem; margin: 5px;
             transition: background 0.2s;
             box-shadow: 0 4px 0 #2980b9;
-            -webkit-tap-highlight-color: transparent; /* タッチ時のハイライト削除 */
+            -webkit-tap-highlight-color: transparent;
         }
         .btn:hover { background-color: #2980b9; transform: translateY(2px); box-shadow: 0 2px 0 #2980b9; }
         .btn:active { transform: translateY(4px); box-shadow: none; }
@@ -67,8 +67,23 @@
         .btn-success { background-color: #2ecc71; box-shadow: 0 4px 0 #27ae60; }
         .btn-success:hover { background-color: #27ae60; box-shadow: 0 2px 0 #27ae60; }
 
-        /* 設定画面オーバーレイ */
-        #overlay {
+        .btn-warning { background-color: #f1c40f; box-shadow: 0 4px 0 #d35400; color: #333; }
+        .btn-warning:hover { background-color: #f39c12; box-shadow: 0 2px 0 #d35400; }
+        
+        .btn-auth {
+            background-color: #ea4335; /* Googleカラー */
+            box-shadow: 0 4px 0 #d93025;
+            color: white;
+            padding: 12px 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        .btn-auth:hover {
+            background-color: #d93025;
+        }
+
+        /* 設定画面・ランキング画面オーバーレイ */
+        #overlay, #ranking-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85);
             display: flex; justify-content: center; align-items: center;
@@ -78,7 +93,7 @@
         }
         .overlay-content {
             background: #34495e; padding: 30px; border-radius: 10px;
-            text-align: center; max-width: 600px; width: 90%;
+            text-align: center; max-width: 90%; width: 90%;
             max-height: 90vh; overflow-y: auto;
         }
         
@@ -97,6 +112,60 @@
             font-size: 1rem;
             font-weight: bold;
         }
+        
+        /* 結果表示エリア */
+        #game-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        /* ランキング表示用スタイル（修正版） */
+        .ranking-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px; 
+            margin-bottom: 20px;
+            flex-wrap: nowrap;
+            padding-bottom: 0;
+        }
+        .ranking-box {
+            background: #2c3e50;
+            padding: 10px; 
+            border-radius: 8px;
+            flex: 1; 
+            min-width: 0; 
+            border: 2px solid #7f8c8d;
+        }
+        .ranking-title {
+            font-weight: bold;
+            color: #f1c40f;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            font-size: 1rem; 
+        }
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            font-size: 0.85rem; 
+            height: 300px;
+            overflow-y: auto;
+        }
+        .ranking-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #444;
+            display: flex;
+            justify-content: space-between;
+        }
+        .ranking-rank { display: inline-block; width: 25px; color: #bdc3c7; }
+        .ranking-score { font-weight: bold; color: white; }
     </style>
 </head>
 <body>
@@ -128,6 +197,42 @@
                 <button id="btn-normal" class="btn">ちゅうきゅう</button>
                 <button id="btn-hard" class="btn btn-danger">じょうきゅう</button>
             </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ccc;">
+            <button id="btn-view-ranking" class="btn btn-warning" style="width: 200px;">スコアをみる</button>
+            
+            <p id="auth-status" style="margin-top: 10px; font-size: 0.9rem; color: #555;">ログインしていません</p>
+            <button id="btn-login" class="btn btn-auth" style="width: 200px;">
+                <span style="font-size: 1rem;">Googleでログイン</span>
+            </button>
+            <button id="btn-logout" class="btn btn-danger hidden" style="width: 200px; margin-top: 10px;">ログアウト</button>
+
+        </div>
+
+        <div id="game-result" style="display: none;">
+            </div>
+
+        <div id="ranking-screen" class="hidden">
+            <div id="ranking-overlay">
+                <div class="overlay-content" style="width: 95%; max-width: 900px;">
+                    <h2 style="color: #f1c40f; margin-top: 0;">ベストスコア 10</h2>
+                    <div class="ranking-container">
+                        <div class="ranking-box">
+                            <div class="ranking-title" style="color: #2ecc71;">しょきゅう</div>
+                            <ul id="rank-list-easy" class="ranking-list"></ul>
+                        </div>
+                        <div class="ranking-box">
+                            <div class="ranking-title" style="color: #3498db;">ちゅうきゅう</div>
+                            <ul id="rank-list-normal" class="ranking-list"></ul>
+                        </div>
+                        <div class="ranking-box">
+                            <div class="ranking-title" style="color: #e74c3c;">じょうきゅう</div>
+                            <ul id="rank-list-hard" class="ranking-list"></ul>
+                        </div>
+                    </div>
+                    <button id="btn-close-ranking" class="btn">とじる</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -142,6 +247,10 @@
                 <div id="disp-enemies" class="info-value">0</div>
             </div>
             <div class="info-item">
+                <div class="info-label">さいだい スコア</div>
+                <div id="disp-max-score" class="info-value" style="color:#e74c3c;">0</div>
+            </div>
+            <div class="info-item">
                 <div class="info-label">さっきの スコア</div>
                 <div id="disp-last-score" class="info-value" style="color:#e67e22;">0</div>
             </div>
@@ -153,54 +262,127 @@
     </div>
 </div>
 
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// 1. Firebaseの設定情報 (お客様の設定)
+const firebaseConfig = {
+    apiKey: "AIzaSyBCg5dCEM89UmYYhfGqVeRf_VrUlg8_o-4",
+    authDomain: "math-braves.firebaseapp.com",
+    projectId: "math-braves",
+    storageBucket: "math-braves.firebasestorage.app",
+    messagingSenderId: "217117619290",
+    appId: "1:217117619290:web:d227feb603970d3948d463"
+};
+
+// 2. Firebaseを初期化
+const app = firebase.initializeApp(firebaseConfig);
+
+// 3. 認証 (Googleログイン) とデータベースの参照を取得
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ユーザー情報格納用
+let currentUser = null; 
+
+/**
+ * ログイン状態の変更を監視し、UIを更新する
+ */
+auth.onAuthStateChanged((user) => {
+    const authStatus = document.getElementById('auth-status');
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (user) {
+        // ログイン済み
+        currentUser = {
+            uid: user.uid,
+            displayName: user.displayName || '名無しさん'
+        };
+        authStatus.textContent = `ログイン中: ${currentUser.displayName}`;
+        btnLogin.classList.add('hidden');
+        btnLogout.classList.remove('hidden');
+    } else {
+        // ログアウト済み
+        currentUser = null;
+        authStatus.textContent = 'ログインしていません';
+        btnLogin.classList.remove('hidden');
+        btnLogout.classList.add('hidden');
+    }
+});
+
+/**
+ * Googleログイン処理
+ */
+function handleLogin() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            // ログイン成功
+            console.log("ログイン成功:", result.user.displayName);
+        })
+        .catch((error) => {
+            // エラー処理
+            console.error("ログインエラー:", error);
+            alert("ログインに失敗しました。\n\nGitHub PagesのドメインがFirebaseに登録されているか確認してください。");
+        });
+}
+
+/**
+ * ログアウト処理
+ */
+function handleLogout() {
+    auth.signOut().then(() => {
+        console.log("ログアウトしました");
+    }).catch((error) => {
+        console.error("ログアウトエラー:", error);
+    });
+}
+
+</script>
 <script>
 /**
  * Game Configuration & State
  */
-// ■ 初級：たし算の練習。必ず1回は重ねる必要があるが、複雑ではない。
 const PRESET_EASY = {
-    handMin: 1, handMax: 9,       // 手札は小さい
-    enemyMin: 10, enemyMax: 15,    // 敵は手札1枚では倒せない（必ず合体が必要）
-    bossMin: 15, bossMax: 25,     // ボスは3〜5枚合体が必要
-    enemyCount: 20,               // 敵の数を少し減らしてテンポよく（20→15）
-    bossHP: 1200,                 // HPを増やしてボスの「強敵感」を出す
-    initialTime: 10,              // 初心者向けに初期時間は少し多め
-    timeRecovery: 2,              // 基本回復
+    handMin: 1, handMax: 9,       
+    enemyMin: 10, enemyMax: 15,    
+    bossMin: 15, bossMax: 25,     
+    enemyCount: 20, bossHP: 1200, 
+    initialTime: 10, timeRecovery: 2, 
     gemProb: [30, 25, 20, 15, 10]
 };
 
-// ■ 中級：適正難易度。2〜3枚の合体が基本。素早い判断が必要。
 const PRESET_NORMAL = {
-    handMin: 1, handMax: 14,       // 1桁の計算をしやすく維持
-    enemyMin: 15, enemyMax: 20,   // 手札2〜3枚分の数値
-    bossMin: 20, bossMax: 30,     // かなりの枚数を重ねないと倒せない
-    enemyCount: 20,               // 標準
-    bossHP: 1500,                 // 大ダメージボーナス前提のHP
-    initialTime: 10,              // 標準
-    timeRecovery: 2,              // 基本回復
+    handMin: 1, handMax: 14,       
+    enemyMin: 15, enemyMax: 20,   
+    bossMin: 20, bossMax: 30,     
+    enemyCount: 20, bossHP: 1500, 
+    initialTime: 10, timeRecovery: 2, 
     gemProb: [30, 25, 20, 15, 10]
 };
 
-// ■ 上級：ゲーマー向け。3〜5枚の合体が必須。捨て札の活用も重要。
 const PRESET_HARD = {
-    handMin: 1, handMax: 19,       // 
-    enemyMin: 20, enemyMax: 30,   // 常に3〜5枚の合体が必要（Time消費が激しい）
-    bossMin: 30, bossMax: 40,     // 限界に近い合体が必要
-    enemyCount: 20,
-    bossHP: 2000,                // 途方もないHP（+10秒回復を連発しないと勝てない）
-    initialTime: 20,              // 最初からクライマックス（ミス即終了）
-    timeRecovery: 2,
+    handMin: 1, handMax: 19,       
+    enemyMin: 20, enemyMax: 30,   
+    bossMin: 30, bossMax: 40,     
+    enemyCount: 20, bossHP: 2000, 
+    initialTime: 20, timeRecovery: 2, 
     gemProb: [30, 25, 20, 15, 10]
 };
 
-// 初期設定（中級にしておくが、ボタンで上書きされる）
 let CONFIG = Object.assign({}, PRESET_NORMAL);
 
 let state = {
     screen: 'TITLE', 
+    difficulty: 'NORMAL', 
     time: 15,
     score: 0,
     lastScore: 0,
+    maxScore: 0, 
     enemiesRemaining: 0, 
     cards: [null, null, null, null, null],
     enemies: [],
@@ -211,8 +393,8 @@ let state = {
     height: 0,
     dragInfo: null,
     isGameOverProcessing: false,
-    isGameClearProcessing: false, // ゲームクリア演出中
-    inputLocked: false // 入力ロック
+    isGameClearProcessing: false, 
+    inputLocked: false 
 };
 
 // Canvas Setup
@@ -222,13 +404,20 @@ const ui = {
     rightPanelContent: document.getElementById('right-panel-content'),
     enemyRange: document.getElementById('disp-enemy-range'),
     enemies: document.getElementById('disp-enemies'),
+    maxScore: document.getElementById('disp-max-score'),
     lastScore: document.getElementById('disp-last-score'),
     totalScore: document.getElementById('disp-total-score'),
     title: document.getElementById('title-screen'),
+    result: document.getElementById('game-result'),
+    rankingScreen: document.getElementById('ranking-screen'),
     btnEasy: document.getElementById('btn-easy'),
     btnNormal: document.getElementById('btn-normal'),
     btnHard: document.getElementById('btn-hard'),
-    btnToTitle: document.getElementById('btn-to-title')
+    btnViewRanking: document.getElementById('btn-view-ranking'),
+    btnCloseRanking: document.getElementById('btn-close-ranking'),
+    btnToTitle: document.getElementById('btn-to-title'),
+    btnLogin: document.getElementById('btn-login'),
+    btnLogout: document.getElementById('btn-logout')
 };
 
 function resize() {
@@ -255,6 +444,64 @@ function getWeightedRandom(weights) {
         r -= weights[i];
     }
     return weights.length;
+}
+
+// --- Ranking Functions ---
+function getRankingKey(diff) {
+    return `math_braves_ranking_v2_${diff}`;
+}
+
+function saveScore(difficulty, score) {
+    // ローカルストレージに保存
+    const key = getRankingKey(difficulty);
+    let ranking = JSON.parse(localStorage.getItem(key)) || [];
+    
+    ranking.push(score);
+    ranking.sort((a, b) => b - a);
+    ranking = ranking.slice(0, 10);
+    
+    localStorage.setItem(key, JSON.stringify(ranking));
+    
+    const isNewRecord = (ranking.length > 0 && ranking[0] === score);
+
+    // TODO: ログインしていれば、ここでFirebaseにもスコアを保存する処理を追加します。
+    // if (currentUser) {
+    //     saveOnlineScore(currentUser.uid, currentUser.displayName, difficulty, score);
+    // }
+
+    return isNewRecord;
+}
+
+function getRanking(difficulty) {
+    const key = getRankingKey(difficulty);
+    return JSON.parse(localStorage.getItem(key)) || [];
+}
+
+function showRankingScreen() {
+    // 難易度ごとにリスト生成 (ローカルランキング)
+    const renderList = (diff, elementId) => {
+        const list = getRanking(diff);
+        const ul = document.getElementById(elementId);
+        ul.innerHTML = '';
+        if (list.length === 0) {
+            ul.innerHTML = '<li style="justify-content:center; color:#7f8c8d;">記録なし</li>';
+            return;
+        }
+        list.forEach((score, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span class="ranking-rank">${index + 1}.</span>
+                <span class="ranking-score">${score} 点</span>
+            `;
+            ul.appendChild(li);
+        });
+    };
+
+    renderList('EASY', 'rank-list-easy');
+    renderList('NORMAL', 'rank-list-normal');
+    renderList('HARD', 'rank-list-hard');
+
+    ui.rankingScreen.classList.remove('hidden');
 }
 
 /**
@@ -477,12 +724,14 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
 function backToTitle() {
     state.screen = 'TITLE';
     ui.title.classList.remove('hidden');
-    ui.btnToTitle.classList.add('hidden');
+    ui.btnToTitle.classList.remove('hidden'); // タイトル画面に戻るボタンは残す
     ui.rightPanelContent.classList.add('invisible');
+    ui.result.style.display = 'none';
     
     // 値のリセット表示
     ui.enemyRange.textContent = "";
     ui.enemies.textContent = "0";
+    ui.maxScore.textContent = "0"; 
     ui.lastScore.textContent = "0";
     ui.totalScore.textContent = "0";
     
@@ -492,6 +741,7 @@ function backToTitle() {
 function initGame() {
     state.score = 0;
     state.lastScore = 0;
+    state.maxScore = 0; 
     state.time = CONFIG.initialTime;
     state.enemiesRemaining = CONFIG.enemyCount;
     state.bossSpawned = false;
@@ -549,6 +799,7 @@ function updateUI() {
     } else {
         ui.enemies.textContent = Math.max(0, state.enemiesRemaining + state.enemies.filter(e => !e.isBoss).length);
     }
+    ui.maxScore.textContent = state.maxScore; 
     ui.lastScore.textContent = state.lastScore;
     ui.totalScore.textContent = state.score;
 }
@@ -595,12 +846,51 @@ function checkPraise(damage, x, y) {
 
 function gameOver() {
     state.screen = 'GAMEOVER';
+    ui.btnToTitle.classList.add('hidden'); // ゲームオーバー時は左下ボタンを隠す
     drawOverlayText("ざんねん...", "#e74c3c", "クリックで タイトルへ");
 }
 
 function gameClear() {
     state.screen = 'CLEAR';
-    drawOverlayText("ゲームクリア！", "#f1c40f", `スコア: ${state.score}`);
+    ui.btnToTitle.classList.add('hidden'); 
+    
+    const timeBonus = state.time * 100;
+    const maxScoreBonus = state.maxScore * 10;
+    const finalScore = state.score + timeBonus + maxScoreBonus;
+    
+    state.lastScore = finalScore; // 最後に獲得したスコアとして更新
+
+    // スコア保存 & 1位更新チェック
+    const isNewRecord = saveScore(state.difficulty, finalScore);
+    const highScoreMsg = isNewRecord ? '自己ベストこうしん！' : 'ランクインならず...';
+
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(0,0,state.width, state.height);
+
+    ui.result.innerHTML = `
+        <div style="background: #34495e; padding: 30px; border-radius: 10px; color: white; text-align: center; border: 4px solid #f1c40f;">
+            <h2 style="font-size: 2.5rem; color: #f1c40f; margin: 0 0 20px 0;">ゲームクリア！</h2>
+            <div style="font-size: 1.1rem; line-height: 1.8; text-align: left; display: inline-block;">
+                <div>ごうけいスコア：<span style="float:right; color:#f1c40f; font-weight:bold;">${state.score}点</span></div>
+                <div>タイムボーナス：${state.time}×100＝<span style="float:right; color:#2ecc71; font-weight:bold;">${timeBonus}点</span></div>
+                <div>MAXスコアボーナス：${state.maxScore}×10＝<span style="float:right; color:#e67e22; font-weight:bold;">${maxScoreBonus}点</span></div>
+                <hr style="border-color: #7f8c8d; margin: 15px 0;">
+                <div style="font-size: 1.5rem;">最終スコア：<span style="float:right; color:#f1c40f; font-weight:bold;">${finalScore}点</span></div>
+                <div style="text-align: center; margin-top: 10px; color: ${isNewRecord ? '#e74c3c' : '#bdc3c7'}; font-weight: bold;">${highScoreMsg}</div>
+            </div>
+            <br><br>
+            <button id="btn-result-ok" class="btn btn-success" style="font-size: 1.2rem; padding: 10px 40px;">OK</button>
+        </div>
+    `;
+    ui.result.style.display = 'block';
+
+    const okBtn = document.getElementById('btn-result-ok');
+    const handleOk = (e) => {
+        if(e) e.preventDefault();
+        backToTitle();
+    };
+    okBtn.addEventListener('click', handleOk);
+    okBtn.addEventListener('touchstart', handleOk, {passive: false});
 }
 
 function drawOverlayText(mainText, color, subText) {
@@ -620,35 +910,28 @@ function drawOverlayText(mainText, color, subText) {
 function drawHUD(ctx) {
     ctx.textAlign = 'center';
     
-    // ■ 修正箇所：「たしざん」を枠の中央に配置
     const titleText = "たしざん";
-    const boxW = 200;  // 枠の幅
-    const boxH = 50;   // 枠の高さ
+    const boxW = 200;  
+    const boxH = 50;   
     const boxX = state.width / 2 - boxW / 2;
-    const boxY = 15;   // 枠の上端位置
+    const boxY = 15;   
     
-    // 枠の描画（背景白、枠線青）
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#2980b9';
     ctx.lineWidth = 4;
     roundRect(ctx, boxX, boxY, boxW, boxH, 10, true, true); 
 
-    // 文字の描画（青く、大きく、中央揃え）
     ctx.fillStyle = '#2980b9';
     ctx.font = 'bold 30px sans-serif'; 
     
-    // 文字の基準線を一時的に「中央」に変更して配置
     ctx.textBaseline = 'middle'; 
     ctx.fillText(titleText, state.width / 2, boxY + boxH / 2); 
-    // 基準線を元に戻す（他の文字のため）
     ctx.textBaseline = 'alphabetic'; 
 
-    // ラベル（位置は変更なし）
     ctx.fillStyle = '#7f8c8d';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText("のこり じかん", state.width / 2, 95);
 
-    // 時間数値（位置は変更なし）
     ctx.fillStyle = state.time <= 3 ? '#e74c3c' : '#2c3e50'; 
     ctx.font = 'bold 60px sans-serif';
     ctx.fillText(state.time, state.width / 2, 145);
@@ -660,13 +943,13 @@ function drawHUD(ctx) {
 function getEventPos(e) {
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const y = (e.touches ? e.touches[0].clientY : e.touches[0].clientY) - rect.top;
     return { x, y };
 }
 
 function onDown(e) {
     if (state.screen !== 'PLAYING' || state.inputLocked) {
-        if (state.screen === 'GAMEOVER' || state.screen === 'CLEAR') {
+        if (state.screen === 'GAMEOVER') {
             backToTitle();
         }
         return;
@@ -720,6 +1003,10 @@ function onUp(e) {
                 state.score += damage;
                 state.lastScore = damage;
                 
+                if (damage > state.maxScore) {
+                    state.maxScore = damage;
+                }
+                
                 state.particles.push(new Particle(enemy.x + enemy.width/2, enemy.y, `+${damage}`, '#f1c40f', 'text'));
                 state.particles.push(new Particle(enemy.x + enemy.width/2, enemy.y + enemy.height/2, "", "#e74c3c", "circle"));
                 
@@ -738,23 +1025,22 @@ function onUp(e) {
                     addTime(totalRecovery);
                     
                     if (enemy.hp <= 0) {
-                        enemy.hp = 0; // 見た目を0に
-                        state.inputLocked = true; // 操作ロック
+                        enemy.hp = 0; 
+                        state.inputLocked = true; 
                         state.isGameClearProcessing = true;
                         
-                        // 少し待ってからボス消滅 -> さらに待ってクリア画面
                         setTimeout(() => {
-                            state.enemies.splice(i, 1); // ボス消滅
+                            state.enemies.splice(i, 1); 
                             state.boss = null;
                             setTimeout(() => {
                                 gameClear();
-                            }, 1000); // 1秒後にクリア画面
-                        }, 500); // 0.5秒間HP0を見せる
+                            }, 1000); 
+                        }, 500); 
                         
                         actionDone = true;
                         state.dragInfo = null;
-                        updateUI(); // 即座にHPバー更新
-                        return; // ここで処理終了
+                        updateUI(); 
+                        return; 
                     } else {
                         enemy.reroll();
                     }
@@ -801,7 +1087,6 @@ function onUp(e) {
             state.cards[idx] = null;
             consumeTime();
             actionDone = true;
-            //state.particles.push(new Particle(cx, cy, "ポイッ", "#95a5a6", 'text'));
         }
     }
 
@@ -872,18 +1157,33 @@ function bindBtn(btn, callback) {
 }
 
 bindBtn(ui.btnEasy, () => {
+    state.difficulty = 'EASY'; 
     CONFIG = Object.assign({}, PRESET_EASY);
     initGame();
 });
 
 bindBtn(ui.btnNormal, () => {
+    state.difficulty = 'NORMAL'; 
     CONFIG = Object.assign({}, PRESET_NORMAL);
     initGame();
 });
 
 bindBtn(ui.btnHard, () => {
+    state.difficulty = 'HARD'; 
     CONFIG = Object.assign({}, PRESET_HARD);
     initGame();
+});
+
+// タイトル画面のログイン/ログアウトボタンにも処理を紐づける
+bindBtn(ui.btnLogin, handleLogin);
+bindBtn(ui.btnLogout, handleLogout);
+
+bindBtn(ui.btnViewRanking, () => {
+    showRankingScreen();
+});
+
+bindBtn(ui.btnCloseRanking, () => {
+    ui.rankingScreen.classList.add('hidden');
 });
 
 bindBtn(ui.btnToTitle, () => {
