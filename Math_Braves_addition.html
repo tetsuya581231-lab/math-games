@@ -267,6 +267,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    // 修正: 必要なFirestoreモジュールを追加 (query, where, orderBy, limit, getDocs)
     import { getFirestore, collection, doc, setDoc, serverTimestamp, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // Your web app's Firebase configuration
@@ -353,12 +354,17 @@
         }
     };
 
-    // --- オンラインランキング取得処理 ---
+    // --- オンラインランキング取得処理 (追加) ---
     window.fetchOnlineRanking = async (difficulty) => {
         try {
             const scoresRef = collection(db, "scores");
             // difficultyでフィルタリングし、スコアで降順ソートし、上位10件を取得
-            const q = query(scoresRef, where("difficulty", "==", difficulty), orderBy("score", "desc"), limit(10));
+            const q = query(
+                scoresRef, 
+                where("difficulty", "==", difficulty), 
+                orderBy("score", "desc"), 
+                limit(10)
+            );
             const querySnapshot = await getDocs(q);
             
             const ranking = [];
@@ -371,7 +377,6 @@
             return [];
         }
     };
-
 </script>
 <script>
 /**
@@ -477,7 +482,7 @@ function getWeightedRandom(weights) {
     return weights.length;
 }
 
-// --- Ranking Functions (Local & Online) ---
+// --- Ranking Functions ---
 function getRankingKey(diff) {
     return `math_braves_ranking_v2_${diff}`;
 }
@@ -496,6 +501,7 @@ function saveScore(difficulty, score) {
     const isNewRecord = (ranking.length > 0 && ranking[0] === score);
 
     // 2. Firebase (Firestore) に保存
+    // モジュラーSDK側で定義した window.currentUser と window.saveOnlineScore を使用
     if (window.currentUser && window.saveOnlineScore) {
         window.saveOnlineScore(window.currentUser.uid, window.currentUser.displayName, difficulty, score);
     }
@@ -508,6 +514,7 @@ function getLocalRanking(difficulty) {
     return JSON.parse(localStorage.getItem(key)) || [];
 }
 
+// 修正: async関数に変更し、オンライン/ローカルを切り替え
 async function showRankingScreen() {
     ui.rankingScreen.classList.remove('hidden');
     
@@ -532,7 +539,6 @@ async function showRankingScreen() {
             
             list.forEach((data, index) => {
                 const li = document.createElement('li');
-                // 自分自身のスコアを強調表示するなどの処理も可能
                 const isMe = (data.uid === window.currentUser.uid);
                 const nameStyle = isMe ? 'color: #f1c40f; font-weight: bold;' : 'color: #bdc3c7;';
                 
@@ -1280,4 +1286,3 @@ backToTitle();
 </script>
 </body>
 </html>
-
